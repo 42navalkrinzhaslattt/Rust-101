@@ -59,7 +59,16 @@ impl BigInt {
     // 
     // *Hint*: You can use `pop` to remove the last element of a vector.
     pub fn from_vec(mut v: Vec<u64>) -> Self {
-        unimplemented!()
+        let mut nb = BigInt::new(0);
+
+        for el in v {
+            nb.data.push(el);
+        }
+
+        while Self::test_invariant(&nb) != true {
+            nb.data.pop();
+        }
+        nb
     }
 }
 
@@ -117,7 +126,50 @@ impl<T: Clone> Clone for SomethingOrNothing<T> {
 // **Exercise 05.2**: Write some more functions on `BigInt`. What about a function that returns the
 // number of digits? The number of non-zero digits? The smallest/largest digit? Of course, these
 // should all take `self` as a shared reference (i.e., in borrowed form).
+impl BigInt{
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
 
+    pub fn positive_digits(&self) -> i32 {
+        let mut res = 0;
+
+        for el in &self.data {
+            match el {
+                0 => res += 0,
+                n => res += 1,
+            }
+        }
+        res
+    }
+
+    pub fn max_digit(&self) -> u64 {
+        let mut max = 0;
+
+        for el in &self.data {
+            max = if max < *el {*el} else {max}
+        }
+        max
+    }
+    pub fn min_digit(&self) -> u64 {
+        let mut min = 0;
+
+        for el in &self.data {
+            min = if min > *el {*el} else {min}
+        }
+        min
+    }
+}
+
+pub fn main() {
+    let vec :Vec<u64> = vec![0, 1, 2, 3, 4, 5];
+    let n = BigInt::from_vec(vec);
+
+    println!("len is {}", n.len());
+    println!("max digit is {}", n.max_digit());
+    println!("min digit is {}", n.min_digit());
+    println!("non-zero digits is {}", n.positive_digits());
+}
 // ## Mutation + aliasing considered harmful (part 2)
 //@ Now that we know how to create references to contents of an `enum` (like `v` above), there's
 //@ another example we can look at for why we have to rule out mutation in the presence of

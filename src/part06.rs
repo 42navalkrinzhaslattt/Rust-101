@@ -20,8 +20,15 @@ impl BigInt {
         } else if self.data.len() > other.data.len() {
             other
         } else {
+            let res = self;
             // **Exercise 06.1**: Fill in this code.
-            unimplemented!()
+            for (index, value) in self.data.iter().enumerate() {
+                if value > other.data[index]
+                {res = self}
+                else if value < other.data[index]
+                {res = other}
+            }
+            res
         }
     }
 }
