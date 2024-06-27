@@ -41,11 +41,11 @@ type FloatOrNothing = SomethingOrNothing<f32>;
 // an alias for `SomethingOrNothing<T>`.
 //@ Remember that `self` is the `this` of Rust, and implicitly has type `Self`.
 impl<T> SomethingOrNothing<T> {
-    fn new(o: Option<T>) -> Self {
+    pub fn new(o: Option<T>) -> Self {
         match o { None => Nothing, Some(t) => Something(t) }        /*@*/
     }
 
-    fn to_option(self) -> Option<T> {
+    pub fn to_option(self) -> Option<T> {
         match self { Nothing => None, Something(t) => Some(t) }     /*@*/
     }
 }

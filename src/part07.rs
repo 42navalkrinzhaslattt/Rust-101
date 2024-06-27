@@ -39,7 +39,24 @@ pub fn vec_min<T: Minimum>(v: &Vec<T>) -> Option<&T> {
 // exercise 06.1. You should *not* make any copies of `BigInt`!
 impl Minimum for BigInt {
     fn min<'a>(&'a self, other: &'a Self) -> &'a Self {
-        unimplemented!()
+        if (*self).data.len() < (*other).data.len() {
+            self
+        } else if (*self).data.len() > (*other).data.len() {
+            other
+        } else {
+            let mut res = self;
+            for (index, value) in (*self).data.iter().enumerate() {
+                if *value > (*other).data[index]
+                {
+                    res = other;
+                }
+                else if *value < (*other).data[index]
+                {
+                    res = self;
+                }
+            }
+            return res;
+        }
     }
 }
 
@@ -105,7 +122,7 @@ fn compare_big_ints() {
 //@ and give it the `test` attribute. `assert!` is like `debug_assert!`, but does not get compiled
 //@ away in a release build.
 #[test]
-fn test_min() {
+    fn test_min() {
     let b1 = BigInt::new(1);
     let b2 = BigInt::new(42);
     let b3 = BigInt::from_vec(vec![0, 1]);
@@ -138,16 +155,19 @@ impl fmt::Debug for BigInt {
 //@ `Debug` implementations can be automatically generated using the `derive(Debug)` attribute.
 
 // Now we are ready to use `assert_eq!` to test `vec_min`.
-/*#[test]*/
+#[test]
 fn test_vec_min() {
     let b1 = BigInt::new(1);
     let b2 = BigInt::new(42);
     let b3 = BigInt::from_vec(vec![0, 1]);
+    let b4 = BigInt::from_vec(vec![]);
 
     let v1 = vec![b2.clone(), b1.clone(), b3.clone()];
     let v2 = vec![b2.clone(), b3.clone()];
+    let v3 = vec![b1.clone(), b4.clone()];
     assert_eq!(vec_min(&v1), Some(&b1));                            /*@*/
     assert_eq!(vec_min(&v2), Some(&b2));                            /*@*/
+    assert_eq!(vec_min(&v3), Some(&b4));
 }
 
 // **Exercise 07.1**: Add some more testcases. In particular, make sure you test the behavior of
@@ -158,6 +178,25 @@ fn test_vec_min() {
 // (This will, of course, need a `Display` bound on `T`.) Then you should be able to use them with
 // `println!` just like you do with numbers, and get rid of the inherent functions to print
 // `SomethingOrNothing<i32>` and `SomethingOrNothing<f32>`.
+use part02::SomethingOrNothing;
+use part02::SomethingOrNothing::Something;
+use part02::SomethingOrNothing::Nothing;
+use part07::fmt::Formatter;
+use part07::fmt::Display;
+use part07::fmt::Error;
 
+impl<T: Display> Display for SomethingOrNothing<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match self {
+            Something(n) => write!(f, "{}", n),
+            Nothing => write!(f, "<Nothing>"),
+        }
+        }
+}
+
+pub fn main() {
+    let a = SomethingOrNothing::new(Some(5));
+    println!("{}", a);
+}
 //@ [index](main.html) | [previous](part06.html) | [raw source](workspace/src/part07.rs) |
 //@ [next](part08.html)

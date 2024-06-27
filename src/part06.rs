@@ -20,15 +20,15 @@ impl BigInt {
         } else if self.data.len() > other.data.len() {
             other
         } else {
-            let res = self;
+            let mut res = &self;
             // **Exercise 06.1**: Fill in this code.
             for (index, value) in self.data.iter().enumerate() {
-                if value > other.data[index]
-                {res = self}
-                else if value < other.data[index]
-                {res = other}
+                if *value > other.data[index]
+                {res = &other}
+                else if *value < other.data[index]
+                {res = &self}
             }
-            res
+            res.clone()
         }
     }
 }
@@ -46,6 +46,18 @@ fn vec_min(v: &Vec<BigInt>) -> Option<BigInt> {
         });                                                         /*@*/
     }
     min
+}
+
+pub fn main() {
+    let vec1 :Vec<u64> = vec![1, 2, 3, 4, 5];
+    let vec2 :Vec<u64> = vec![6, 7, 8, 9];
+    let a = BigInt::from_vec(vec1);
+    let b = BigInt::from_vec(vec2);
+    let min :&Vec<u64> = &a.min_try1(b).data;
+
+    for el in min {
+        println!("{}", *el);
+    }
 }
 //@ Now, what's happening here? Why do we have to to make a full (deep) copy of `e`, and why did we
 //@ not have to do that in our previous version?
