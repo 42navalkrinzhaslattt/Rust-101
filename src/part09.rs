@@ -113,7 +113,7 @@ fn print_digits_v2(b: &BigInt) {
 //@ piece of code.
 fn iter_invalidation_demo() {
     let mut b = BigInt::new(1 << 63) + BigInt::new(1 << 16) + BigInt::new(1 << 63);
-    for digit in b.iter() {
+    for digit in &b {
         println!("{}", digit);
         /*b = b + BigInt::new(1);*/                                 /* BAD! */
     }

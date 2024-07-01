@@ -31,6 +31,16 @@ pub struct Options {
     pub pattern: String,
     pub output_mode: OutputMode,
 }
+#[derive(PartialOrd)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(Ord)]
+
+pub struct Line {
+    pub str: String,
+    pub idx: i32,
+    pub fname: String,
+}
 
 //@ Now we can write three functions to do the actual job of reading, matching, and printing,
 //@ respectively. To get the data from one thread to the next, we will use *message passing*: We
@@ -47,16 +57,22 @@ pub struct Options {
 //@ using atomic operations to keep the reference count up-to-date.
 
 // The first function reads the files, and sends every line over the `out_channel`.
-fn read_files(options: Arc<Options>, out_channel: SyncSender<String>) {
+fn read_files(options: Arc<Options>, out_channel: SyncSender<Line>) {
     for file in options.files.iter() {
         // First, we open the file, ignoring any errors.
         let file = fs::File::open(file).unwrap();
         // Then we obtain a `BufReader` for it, which provides the `lines` function.
         let file = io::BufReader::new(file);
+        let mut idx = 1;
         for line in file.lines() {
-            let line = line.unwrap();
+            let tuple = Line { 
+            str: line.unwrap(),
+            idx: idx,
+            fname: file!().to_string(),
+            };
             // Now we send the line over the channel, ignoring the possibility of `send` failing.
-            out_channel.send(line).unwrap();
+            out_channel.send(tuple).unwrap();
+            idx += 1;
         }
     }
     // When we drop the `out_channel`, it will be closed, which the other end can notice.
@@ -65,14 +81,14 @@ fn read_files(options: Arc<Options>, out_channel: SyncSender<String>) {
 // The second function filters the lines it receives through `in_channel` with the pattern, and sends
 // matches via `out_channel`.
 fn filter_lines(options: Arc<Options>,
-                in_channel: Receiver<String>,
-                out_channel: SyncSender<String>) {
+                in_channel: Receiver<Line>,
+                out_channel: SyncSender<Line>) {
     // We can simply iterate over the channel, which will stop when the channel is closed.
     for line in in_channel.iter() {
         // `contains` works on lots of types of patterns, but in particular, we can use it to test
         // whether one string is contained in another. This is another example of Rust using traits
         // as substitute for overloading.
-        if line.contains(&options.pattern) {
+        if line.str.contains(&options.pattern) {
             out_channel.send(line).unwrap();                        /*@*/
         }
     }
@@ -80,12 +96,12 @@ fn filter_lines(options: Arc<Options>,
 
 // The third function performs the output operations, receiving the relevant lines on its
 // `in_channel`.
-fn output_lines(options: Arc<Options>, in_channel: Receiver<String>) {
+fn output_lines(options: Arc<Options>, in_channel: Receiver<Line>) {
     match options.output_mode {
         Print => {
             // Here, we just print every line we see.
             for line in in_channel.iter() {
-                println!("{}", line);                               /*@*/
+                println!("file: {}, idx: {}, line: {}", line.fname, line.idx, line.str);                               /*@*/
             }
         },
         Count => {
@@ -97,9 +113,12 @@ fn output_lines(options: Arc<Options>, in_channel: Receiver<String>) {
         SortAndPrint => {
             // We are asked to sort the matching lines before printing. So let's collect them all
             // in a local vector...
-            let mut data: Vec<String> = in_channel.iter().collect();
+            let mut data: Vec<Line> = in_channel.iter().collect();
+            data.sort();
             // ...and implement the actual sorting later.
-            unimplemented!()
+            for line in data.iter() {
+                println!("file: {}, idx: {}, line: {}", line.fname, line.idx, line.str);
+            }
         }
     }
 }
@@ -149,7 +168,7 @@ pub fn main() {
                     "src/part11.rs".to_string(),
                     "src/part12.rs".to_string()],
         pattern: "let".to_string(),
-        output_mode: Print
+        output_mode: SortAndPrint
     };
     run(options);
 }

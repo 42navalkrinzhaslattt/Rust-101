@@ -49,8 +49,14 @@ impl ConcurrentCounter {
         // the data contained in the mutex.
         //@ (We will discuss the `unwrap` soon.) `.0` is how we access the first component of a
         //@ tuple or a struct.
-        let mut counter = self.0.lock().unwrap();
         //@ The guard is a smart pointer to the content.
+            let mut counter = self.0.lock().unwrap_or_else(|poisoned| {
+            let inner_data = poisoned.into_inner();
+            eprintln!("Mutex was poisoned: {}", inner_data);
+            std::process::exit(0);
+            inner_data
+        });
+        //let mut counter = self.0.lock().unwrap();
         *counter = *counter + by;
         //@ At the end of the function, `counter` is dropped and the mutex is available again.
         //@ This can only happen when full ownership of the guard is given up. In particular, it is
@@ -64,6 +70,20 @@ impl ConcurrentCounter {
         //@ *poisoned*. Future attempts to `lock` it will fail.
         //@ Above, we simply assert via `unwrap` that this will never happen. Alternatively, we
         //@ could have a look at the poisoned state and attempt to recover from it.
+    }
+
+    pub fn compare_and_inc(&self, test: usize, by: usize) {
+        let mut counter = self.0.lock().unwrap_or_else(|poisoned| {
+            let inner_data = poisoned.into_inner();
+            eprintln!("Mutex was poisoned: {}", inner_data);
+            std::process::exit(0);
+            inner_data
+        });
+        //let mut counter = self.0.lock().unwrap();
+        if *counter == test {
+            *counter = *counter + by;
+            //panic!();
+        }
     }
 
     // The function `get` returns the current value of the counter.
@@ -92,6 +112,7 @@ pub fn main() {
         for _ in 0..10 {
             thread::sleep(Duration::from_millis(20));
             counter2.increment(3);
+            counter2.compare_and_inc(5, 1);
         }
     });
 
@@ -100,7 +121,7 @@ pub fn main() {
         thread::sleep(Duration::from_millis(5));
         println!("Current value: {}", counter.get());
     }
-
+        
     // Finally, we wait for all the threads to finish to be sure we can catch the counter's final
     // value.
     handle1.join().unwrap();

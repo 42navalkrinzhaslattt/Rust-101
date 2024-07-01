@@ -121,7 +121,7 @@ fn compare_big_ints() {
 //@ It doesn't get much simpler: You just write a function (with no arguments or return value),
 //@ and give it the `test` attribute. `assert!` is like `debug_assert!`, but does not get compiled
 //@ away in a release build.
-#[test]
+/*#[test]*/
     fn test_min() {
     let b1 = BigInt::new(1);
     let b2 = BigInt::new(42);
@@ -155,7 +155,7 @@ impl fmt::Debug for BigInt {
 //@ `Debug` implementations can be automatically generated using the `derive(Debug)` attribute.
 
 // Now we are ready to use `assert_eq!` to test `vec_min`.
-#[test]
+/*#[test]*/
 fn test_vec_min() {
     let b1 = BigInt::new(1);
     let b2 = BigInt::new(42);

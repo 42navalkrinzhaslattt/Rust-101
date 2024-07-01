@@ -58,8 +58,10 @@ fn print_with_prefix_v1(b: &BigInt, prefix: String) {
 // Here's a small main function, demonstrating the code above in action. Remember to edit `main.rs`
 // to run it.
 pub fn main() {
-    let bignum = BigInt::new(1 << 63) + BigInt::new(1 << 16) + BigInt::new(1 << 63);
-    print_with_prefix_v1(&bignum, "Digit: ".to_string());
+    //let bignum = BigInt::new(1 << 63) + BigInt::new(1 << 16) + BigInt::new(1 << 63);
+    //print_with_prefix_v1(&bignum, "Digit: ".to_string());
+    let vec :Vec<i32> = vec![1, 2, 3, 4];
+    println!("sum is {}", vec_sum_even(&vec));
 }
 
 // ## Closures
@@ -136,7 +138,8 @@ fn inc_print_threshold(v: &Vec<i32>, offset: i32, threshold: i32) {
     }
 }
 
-// Sometimes it is useful to know both the position of some element in a list, and its value.
+// Sometimes it
+// is useful to know both the position of some element in a list, and its value.
 // That's where the `enumerate` function helps.
 fn print_enumerated<T: fmt::Display>(v: &Vec<T>) {
     //@ `enumerate` turns an iterator over `T` into an iterator over `(usize, T)`, where the first
@@ -157,6 +160,15 @@ fn filter_vec_by_divisor(v: &Vec<i32>, divisor: i32) -> Vec<i32> {
     v.iter().map(|n| *n).filter(|n| *n % divisor == 0).collect()    /*@*/
 }
 
+fn vec_sum_even(vec: &Vec<i32>) -> i32 {
+    let mut sum :i32 = 0;
+    let new_vec :Vec<i32> = vec.iter().map(|n| *n).filter(|n| *n % 2 == 0).collect();
+
+    for el in &new_vec {
+        sum = sum + *el;
+    }
+    sum
+}
 // **Exercise 10.1**: Look up the
 // [documentation of `Iterator`](https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html)
 // to learn about more functions that can act on iterators. Try using some of them. What about a

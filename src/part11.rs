@@ -39,18 +39,18 @@ struct CallbacksV1<F: FnMut(i32)> {
 //@ however, `Box<T>` is a *pointer* to a heap-allocated `T`. It is a lot like `std::unique_ptr` in
 //@ C++. In our current example, the important bit is that since it's a pointer, `T` can be
 //@ unsized, but `Box<T>` itself will always be sized. So we can put it in a `Vec`.
-pub struct Callbacks {
-    callbacks: Vec<Box<dyn FnMut(i32)>>,
+pub struct Callbacks<T> {
+    callbacks: Vec<Box<dyn FnMut(&T)>>,
 }
 
-impl Callbacks {
+impl<T> Callbacks<T> {
     // Now we can provide some functions. The constructor should be straight-forward.
     pub fn new() -> Self {
         Callbacks { callbacks: Vec::new() }                         /*@*/
     }
 
     // Registration simply stores the callback.
-    pub fn register(&mut self, callback: Box<dyn FnMut(i32)>) {
+    pub fn register(&mut self, callback: Box<dyn FnMut(&T)>) {
         self.callbacks.push(callback);
     }
 
@@ -67,12 +67,12 @@ impl Callbacks {
     //@ Here, we use the special lifetime `'static`, which is the lifetime of the entire program.
     //@ The same bound has been implicitly added in the version of `register` above, and in the
     //@ definition of `Callbacks`.
-    pub fn register_generic<F: FnMut(i32)+'static>(&mut self, callback: F) {
+    pub fn register_generic<F: FnMut(&T)+'static>(&mut self, callback: F) {
         self.callbacks.push(Box::new(callback));                    /*@*/
     }
 
     // And here we call all the stored callbacks.
-    pub fn call(&mut self, val: i32) {
+    pub fn call(&mut self, val: &T) {
         // Since they are of type `FnMut`, we need to mutably iterate.
         for callback in self.callbacks.iter_mut() {
             //@ Here, `callback` has type `&mut Box<FnMut(i32)>`. We can make use of the fact that
@@ -95,7 +95,8 @@ impl Callbacks {
 pub fn main() {
     let mut c = Callbacks::new();
     c.register(Box::new(|val| println!("Callback 1: {}", val)));
-    c.call(0);
+    let n1 = 1;
+    c.call(&n1);
 
     {
         //@ We can even register callbacks that modify their environment. Per default, Rust will
@@ -112,7 +113,9 @@ pub fn main() {
             println!("Callback 2: {} ({}. time)", val, count);
         } );
     }
-    c.call(1); c.call(2);
+    let n2 = 2;
+    let n3 = 3;
+    c.call(&n2); c.call(&n3);
 }
 
 //@ ## Run-time behavior

@@ -20,24 +20,40 @@
 //@ length (they will be *fat pointers*). Such a reference to an array is called a *slice*. As we
 //@ will see, a slice can be split. Our function can thus take a mutable slice, and promise to sort
 //@ all elements in there.
-pub fn sort<T: PartialOrd>(data: &mut [T]) {
-    if data.len() < 2 { return; }
+pub fn print_arr<T: std::fmt::Display>(vec: &mut [T]) {
+    for el in &mut *vec {
+        println!("{}", el);
+    }
+}
+
+pub fn sort<T: PartialOrd + std::fmt::Display>(data: &mut [T]) {
+    if data.len() <= 2 {
+        if data.len() == 2 && data[0] > data[1] {
+            data.swap(0, 1);
+        }
+        return;
+    }
 
     // We decide that the element at 0 is our pivot, and then we move our cursors through the rest
     // of the slice, making sure that everything on the left is no larger than the pivot, and
     // everything on the right is no smaller.
     let mut lpos = 1;
-    let mut rpos = data.len();
+    let mut rpos = data.len() - 1;
     /* Invariant: pivot is data[0]; everything with index (0,lpos) is <= pivot;
        [rpos,len) is >= pivot; lpos < rpos */
-    loop {
-        // **Exercise 14.1**: Complete this Quicksort loop. You can use `swap` on slices to swap
-        // two elements. Write a test function for `sort`.
-        unimplemented!()
+    while lpos < rpos {
+        while data[lpos] < data[0] {
+            lpos += 1;
+        }
+        while data[rpos] > data[0] {
+            rpos -= 1;
+        }
+        if lpos < rpos {
+            data.swap(lpos, rpos);
+        }
     }
-
     // Once our cursors met, we need to put the pivot in the right place.
-    data.swap(0, lpos-1);
+    data.swap(0, lpos - 1);
 
     // Finally, we split our slice to sort the two halves. The nice part about slices is that
     // splitting them is cheap:
@@ -50,8 +66,10 @@ pub fn sort<T: PartialOrd>(data: &mut [T]) {
     //@ for *slicing*: Giving a range of indices, and obtaining an appropriate part of the slice we
     //@ started with. Here, we remove the last element from `part1`, which is the pivot. This makes
     //@ sure both recursive calls work on strictly smaller slices.
-    sort(&mut part1[..lpos-1]);                                     /*@*/
-    sort(part2);                                                    /*@*/
+    //println!("part 1");
+    sort(&mut part1[..lpos - 1]);
+    //println!("part 2");
+    sort(part2);
 }
 
 // **Exercise 14.2**: Since `String` implements `PartialEq`, you can now change the function
@@ -67,6 +85,11 @@ fn sort_nums(data: &mut Vec<i32>) {
     sort(&mut data[..]);
 }
 
+//pub fn main() {
+//    let mut vec :Vec<i32> = vec![4,2, 63,3,456, 123];
+//    sort_nums(&mut vec);
+//    print_arr(&mut vec);
+//}
 // ## Arrays
 //@ An *array* in Rust is given by the type `[T; n]`, where `n` is some *fixed* number. So, `[f64;
 //@ 10]` is an array of 10 floating-point numbers, all one right next to the other in memory.
@@ -107,7 +130,7 @@ fn sort_array() {
 
 // I disabled the following module (using a rather bad hack), because it only compiles if `docopt`
 // is linked. Remove the attribute of the `rgrep` module to enable compilation.
-#[cfg(feature = "disabled")]
+//#[cfg(feature = "disabled")]
 pub mod rgrep {
     // Now that `docopt` is linked, we can first add it to the namespace with `extern crate` and
     // then import shorter names with `use`. We also import some other pieces that we will need.
@@ -171,13 +194,13 @@ Options:
         }
     }
 
+    pub fn main() {
+        run(get_options());                                         /*@*/
+    }
     // Finally, we can call the `run` function from the previous part on the options extracted using
     // `get_options`. Edit `main.rs` to call this function.
     // You can now use `cargo run -- <pattern> <files>` to call your program, and see the argument
     // parser and the threads we wrote previously in action!
-    pub fn main() {
-        run(get_options());                                         /*@*/
-    }
 }
 
 // **Exercise 14.3**: Wouldn't it be nice if rgrep supported regular expressions? There's already a
